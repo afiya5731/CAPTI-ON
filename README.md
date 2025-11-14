@@ -78,7 +78,57 @@ git clone https://github.com/yourusername/Capti-On.git
 cd Capti-On
 
 ### 2️⃣ Create virtual environment and install dependencies
+```bash
 python -m venv venv
 source venv/bin/activate  # (or venv\Scripts\activate for Windows)
 pip install -r requirements.txt
+
+3️⃣ Run the Flask app
+python app.py
+
+4️⃣ Access the Web App
+
+Go to http://localhost:5000 in your browser.
+
+🧾 Example Usage
+1. Upload or capture an image.
+2. Enter a short product description or keyword.
+3. Choose tone, language, and platform.
+4. Click Generate Caption.
+5. Copy, download, or share your caption instantly.
+
+
+
+🧩 Project Flow
+User Input → Image & Prompt → Preprocessing → CNN–LSTM Model  
+→ Caption Generation → Tone/Language Adaptation → Final Output
+
+
+🌟 Impact
+Capti-On bridges the gap between visual content and linguistic creativity.
+It saves time, reduces manual effort, and empowers creators, businesses, and marketers with personalized, platform-ready captions — turning images into stories that connect with audiences.
+
+👩‍💻 Developers
+
+
+Afiya Khan
+
+Megha Yadav
+
+Menuka
+
+Pallavi Rana
+
+
+Department of Computer Science (AI & DS)
+Sagar Institute of Science & Technology (SISTec), Bhopal
+
+🏁 License
+This project is developed for academic and research purposes.
+© 2025 Capti-On Team. All rights reserved.
+
+🖋️ Tagline:
+
+“Capti-On — Where Images Speak in Words.”
+
 
