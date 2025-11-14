@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini Caption Chatbot</title>
+  <style>
+    
+    body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; padding: 0; }
+    .chat-container {
+      max-width: 100%; height:100%; background: white;
+      border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 10px;
+    }
+    h2 { text-align: center; color: #007bff; }
+    .messages { max-height: 100%; overflow-y: auto; margin-bottom: 15px; padding-right: 10px;  height:180px;}
+    .msg { padding: 10px 15px; border-radius: 10px; margin: 8px 0;
+      width: fit-content; max-width: 100%; line-height: 1.4em; word-wrap: break-word; }
+    .user { background: #007bff; color: white; margin-left: auto; }
+    .bot { background: #e5e5ea; color: black; }
+    .input-area { display: flex; gap: 6px; flex-wrap: wrap; }
+    input[type="text"] { flex: 1; padding: 8x; border: 1px solid #ccc; border-radius: 8px; }
+    button { padding: 10px 10px; background: #007bff; color: white;
+      border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    #typing { font-style: italic; color: #666; display: none; margin-left: 10px; }
+    #preview { margin-top: 10px; text-align: center; }
+    #preview img { width: 150px; border-radius: 10px; border: 2px solid #ccc; margin-top: 10px; }
+    .top-buttons { display: flex; justify-content: space-between; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+    </header>
+  <div class="chat-container">
+    <h2>💬 Capti-on Chatbot</h2>
+    <div class="top-buttons">
+      <button onclick="resetChat()"style="background:#e5e5ea;"><img src="{{ url_for('static', filename='images/newchat.png') }}" alt=""width="20" height="20"></button>
+      <button onclick="downloadChat()" style="background:##e5e5ea;">🡻</button>
+    </div>
+
+    <div class="messages" id="chatbox"></div>
+    <div id="typing">...</div>
+    <div id="preview"></div>
+
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Ask or describe your product..." />
+      <button onclick="sendMessage()">Send</button>
+      <button onclick="captureImage()">📸</button>
+      <input type="file" id="imageUpload" accept="image/*" style="display:none" onchange="previewImage(event)">
+      <button onclick="document.getElementById('imageUpload').click()">📤</button>
+    </div>
+
+    <video id="camera" autoplay style="display:none;width:100%;border-radius:10px;margin-top:10px;"></video>
+    <button id="snapBtn" style="display:none;">📷 Capture</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+  </div>
+
+  <script>
+    const chatbox = document.getElementById("chatbox");
+    const typing = document.getElementById("typing");
+    const previewDiv = document.getElementById("preview");
+    const video = document.getElementById("camera");
+    const canvas = document.getElementById("canvas");
+    const snapBtn = document.getElementById("snapBtn");
+    let capturedImage = null;
+
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const message = input.value.trim();
+      if (!message && !capturedImage) return;
+
+      const userDiv = document.createElement("div");
+      userDiv.className = "msg user";
+      userDiv.textContent = message || "[📸 Image]";
+      chatbox.appendChild(userDiv);
+      chatbox.scrollTop = chatbox.scrollHeight;
+
+      input.value = "";
+      previewDiv.innerHTML = "";
+      typing.style.display = "block";
+
+      const res = await fetch("/chatbot_api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, image: capturedImage })
+      });
+
+      const data = await res.json();
+      typing.style.display = "none";
+
+      const botDiv = document.createElement("div");
+      botDiv.className = "msg bot";
+      botDiv.textContent = data.response;
+      chatbox.appendChild(botDiv);
+      chatbox.scrollTop = chatbox.scrollHeight;
+      capturedImage = null;
+    }
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        capturedImage = e.target.result;
+        previewDiv.innerHTML = `<img src="${capturedImage}" alt="Preview">`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function captureImage() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.style.display = "block";
+        snapBtn.style.display = "block";
+        snapBtn.onclick = () => {
+          const context = canvas.getContext("2d");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          capturedImage = canvas.toDataURL("image/png");
+          video.style.display = "none";
+          snapBtn.style.display = "none";
+          stream.getTracks().forEach(track => track.stop());
+          previewDiv.innerHTML = `<img src="${capturedImage}" alt="Captured Image">`;
+        };
+      } catch (err) {
+        alert("Camera access denied or unavailable.");
+      }
+    }
+
+    async function resetChat() {
+      await fetch("/reset_chat", { method: "POST" });
+      chatbox.innerHTML = "";
+      alert("Chat has been reset!");
+    }
+
+    function downloadChat() {
+      window.location.href = "/download_chat";
+    }
+  </script>
+</body>
+</html>
